@@ -13,7 +13,7 @@ local DecoratorHidden = Decorator:new()
 ---@return DecoratorHidden
 function DecoratorHidden:new(opts)
   local o = Decorator.new(self, {
-    enabled = opts.hidden.enable,
+    enabled = true,
     hl_pos = HL_POSITION[opts.renderer.highlight_hidden] or HL_POSITION.none,
     icon_placement = ICON_PLACEMENT[opts.renderer.icons.hidden_placement] or ICON_PLACEMENT.none,
   })

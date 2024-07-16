@@ -430,7 +430,7 @@ local DEFAULT_OPTS = { -- BEGIN_DEFAULT_OPTS
         folder_arrow = true,
         git = true,
         modified = true,
-        hidden = true,
+        hidden = false,
         diagnostics = true,
         bookmarks = true,
       },
@@ -506,9 +506,6 @@ local DEFAULT_OPTS = { -- BEGIN_DEFAULT_OPTS
     enable = false,
     show_on_dirs = true,
     show_on_open_dirs = true,
-  },
-  hidden = {
-    enable = false,
   },
   filters = {
     enable = true,
