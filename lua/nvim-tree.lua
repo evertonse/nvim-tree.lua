@@ -507,6 +507,9 @@ local DEFAULT_OPTS = { -- BEGIN_DEFAULT_OPTS
     show_on_dirs = true,
     show_on_open_dirs = true,
   },
+  hidden = {
+    enable = false,
+  },
   filters = {
     enable = true,
     git_ignored = true,
