@@ -1,1 +1,0 @@
-      notify.error("Handler for event " .. event_name .. " errored. " .. vim.inspect(error))
