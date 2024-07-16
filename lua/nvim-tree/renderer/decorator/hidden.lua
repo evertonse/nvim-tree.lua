@@ -1,0 +1,63 @@
+local buffers = require "nvim-tree.buffers"
+
+local HL_POSITION = require("nvim-tree.enum").HL_POSITION
+local ICON_PLACEMENT = require("nvim-tree.enum").ICON_PLACEMENT
+
+local Decorator = require "nvim-tree.renderer.decorator"
+
+---@class DecoratorHidden: Decorator
+---@field icon HighlightedString|nil
+local DecoratorHidden = Decorator:new()
+
+---@param opts table
+---@return DecoratorHidden
+function DecoratorHidden:new(opts)
+  local o = Decorator.new(self, {
+    enabled = true,
+    hl_pos = HL_POSITION.name,
+    icon_placement = ICON_PLACEMENT.before,
+  })
+  ---@cast o DecoratorHidden
+  Inspect(o)
+
+  if not o.enabled then
+    return o
+  end
+
+  --XXX:
+  if true or opts.renderer.icons.show.hidden then
+    o.icon = {
+      str = "hidden",
+      hl = { "NvimTreeHiddenIcon" },
+    }
+    o:define_sign(o.icon)
+  end
+
+  return o
+end
+
+---Hidden icon: hidden.enable, renderer.icons.show.hidden and node starts with `.` (dotfile).
+---@param node Node
+---@return HighlightedString[]|nil icons
+function DecoratorHidden:calculate_icons(node)
+  if self.enabled and node.name:sub(1, 1) == "." then
+    return { self.icon }
+  end
+end
+
+---Hidden highlight: hidden.enable, renderer.highlight_hidden and node starts with `.` (dotfile).
+---@param node Node
+---@return string|nil group
+function DecoratorHidden:calculate_highlight(node)
+  if not self.enabled or self.hl_pos == HL_POSITION.none or not node.name:sub(1, 1) == "." then
+    return nil
+  end
+
+  if node.nodes then
+    return "NvimTreeHiddenFolderHL"
+  else
+    return "NvimTreeHiddenFileHL"
+  end
+end
+
+return DecoratorHidden
