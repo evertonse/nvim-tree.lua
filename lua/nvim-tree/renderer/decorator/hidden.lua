@@ -13,21 +13,19 @@ local DecoratorHidden = Decorator:new()
 ---@return DecoratorHidden
 function DecoratorHidden:new(opts)
   local o = Decorator.new(self, {
-    enabled = true,
-    hl_pos = HL_POSITION.name,
-    icon_placement = ICON_PLACEMENT.before,
+    enabled = opts.hidden.enable,
+    hl_pos = HL_POSITION[opts.renderer.highlight_hidden] or HL_POSITION.none,
+    icon_placement = ICON_PLACEMENT[opts.renderer.icons.hidden_placement] or ICON_PLACEMENT.none,
   })
   ---@cast o DecoratorHidden
-  Inspect(o)
 
   if not o.enabled then
     return o
   end
 
-  --XXX:
-  if true or opts.renderer.icons.show.hidden then
+  if opts.renderer.icons.show.hidden then
     o.icon = {
-      str = "hidden",
+      str = opts.renderer.icons.glyphs.hidden,
       hl = { "NvimTreeHiddenIcon" },
     }
     o:define_sign(o.icon)
@@ -40,7 +38,7 @@ end
 ---@param node Node
 ---@return HighlightedString[]|nil icons
 function DecoratorHidden:calculate_icons(node)
-  if self.enabled and node.name:sub(1, 1) == "." then
+  if self.enabled and (node.name:sub(1, 1) == ".") then
     return { self.icon }
   end
 end
@@ -49,7 +47,7 @@ end
 ---@param node Node
 ---@return string|nil group
 function DecoratorHidden:calculate_highlight(node)
-  if not self.enabled or self.hl_pos == HL_POSITION.none or not node.name:sub(1, 1) == "." then
+  if not self.enabled or self.hl_pos == HL_POSITION.none or not (node.name:sub(1, 1) == ".") then
     return nil
   end
 
