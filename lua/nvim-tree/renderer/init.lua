@@ -51,7 +51,7 @@ local function _draw(bufnr, lines, hl_args, signs, extmarks, virtual_lines)
     end
   end
 
-  for _, vline in ipairs(ReverseTable(virtual_lines)) do
+  for _, vline in ipairs(virtual_lines) do
     vim.api.nvim_buf_set_extmark(bufnr, namespace_extmarks_id, vline.line_nr, 0, {
       virt_lines = { { { vline.text, "Conceal" } } },
       virt_lines_above = false,
