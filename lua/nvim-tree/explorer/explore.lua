@@ -6,6 +6,7 @@ local sorters = require "nvim-tree.explorer.sorters"
 local filters = require "nvim-tree.explorer.filters"
 local live_filter = require "nvim-tree.live-filter"
 local log = require "nvim-tree.log"
+-- local explorer_module = require "nvim-tree.explorer"
 
 local Watcher = require "nvim-tree.watcher"
 
@@ -21,10 +22,15 @@ local function populate_children(handle, cwd, node, git_status)
   local nodes_by_path = utils.bool_record(node.nodes, "absolute_path")
 
   local filter_status = filters.prepare(git_status)
+
   while true do
     local name, t = vim.loop.fs_scandir_next(handle)
     if not name then
       break
+    end
+    local is_dir = t == "directory"
+    if is_dir then
+      node.hidden_count = 0
     end
 
     local abs = utils.path_join { cwd, name }
@@ -35,7 +41,7 @@ local function populate_children(handle, cwd, node, git_status)
 
     if not filters.should_filter(abs, stat, filter_status) and not nodes_by_path[abs] and Watcher.is_fs_event_capable(abs) then
       local child = nil
-      if t == "directory" and vim.loop.fs_access(abs, "R") then
+      if is_dir and vim.loop.fs_access(abs, "R") then
         child = builders.folder(node, abs, name, stat)
       elseif t == "file" then
         child = builders.file(node, abs, name, stat)
@@ -50,10 +56,16 @@ local function populate_children(handle, cwd, node, git_status)
         nodes_by_path[child.absolute_path] = true
         explorer_node.update_git_status(child, node_ignored, git_status)
       end
+    else
+      if is_dir then
+        node.hidden_count = node.hidden_count + 1
+      end
     end
 
     log.profile_end(profile)
   end
+
+  -- explorer_module.reload(node)
 end
 
 ---@param node Node
@@ -70,13 +82,6 @@ function M.explore(node, status)
 
   populate_children(handle, cwd, node, status)
 
-  local child_hidden_count = 0
-  for _, child_node in ipairs(node.nodes) do
-    if child_node then
-      child_hidden_count = child_hidden_count + 1
-    end
-  end
-
   local is_root = not node.parent
   local child_folder_only = explorer_node.has_one_child_folder(node) and node.nodes[1]
   if M.config.group_empty and not is_root and child_folder_only then
@@ -92,21 +97,6 @@ function M.explore(node, status)
 
   sorters.sort(node.nodes)
   live_filter.apply_filter(node)
-
-  if true or child_hidden_count ~= 0 then
-    table.insert(node.nodes, {
-      absolute_path = "",
-      git_status = {},
-
-      has_children = false,
-      name = "(" .. tostring(child_hidden_count) .. " hidden items)",
-      nodes = {},
-      open = false,
-
-      parent = node,
-      type = "file",
-    })
-  end
 
   log.profile_end(profile)
   return node.nodes

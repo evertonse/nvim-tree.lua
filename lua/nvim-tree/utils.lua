@@ -534,6 +534,17 @@ function M.inject_node(f)
   end
 end
 
+---@param tbl table
+---@return table
+M.reverse_table = function(tbl)
+  local size = #tbl
+  local reversed = {}
+  for i = size, 1, -1 do
+    table.insert(reversed, tbl[i])
+  end
+  return reversed
+end
+
 --- Is the buffer named NvimTree_[0-9]+ a tree? filetype is "NvimTree" or not readable file.
 --- This is cheap, as the readable test should only ever be needed when resuming a vim session.
 ---@param bufnr number|nil may be 0 or nil for current

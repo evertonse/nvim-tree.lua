@@ -21,6 +21,7 @@
 ---@field group_next Node|nil
 ---@field nodes Node[]
 ---@field open boolean
+---@field hidden_count integer
 
 ---@class FileNode: BaseNode
 ---@field extension string

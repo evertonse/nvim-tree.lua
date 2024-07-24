@@ -62,6 +62,7 @@ function Builder:new()
     markers = {},
     signs = {},
     extmarks = {},
+    virtual_lines = {},
   }
   setmetatable(o, self)
   self.__index = self
@@ -220,6 +221,11 @@ function Builder:format_line(indent_markers, arrows, icon, name, node)
   local line = { indent_markers, arrows }
   add_to_end(line, { icon })
 
+  if node == nil then
+    add_to_end(line, { name })
+    return line
+  end
+
   for i = #M.decorators, 1, -1 do
     add_to_end(line, M.decorators[i]:icons_before(node))
   end
@@ -334,6 +340,7 @@ function Builder:build_line(node, idx, num_children)
   local icon, name
   if is_folder then
     icon, name = self:build_folder(node)
+    assert(node.type == "directory")
   elseif is_symlink then
     icon, name = self:build_symlink(node)
   else
@@ -354,7 +361,26 @@ function Builder:build_line(node, idx, num_children)
 
   if node.open then
     self.depth = self.depth + 1
+    local n = node
     self:build_lines(node)
+    if n.open and (n.hidden_count and n.hidden_count > 0) then
+      indent_markers = pad.get_indent_markers(self.depth, idx, num_children, node, self.markers)
+      -- Lua patterns https://www.lua.org/pil/20.2.html
+      indent_markers.str = indent_markers.str:reverse():gsub("[^%s]+", "", 1):reverse()
+      assert(#indent_markers < 2)
+      arrows = pad.get_arrows(node)
+      -- local padding = indent_markers.str -- string.rep("  ", self.depth)
+      line = self:format_line(
+        indent_markers,
+        arrows,
+        { str = "", hl = "Conceal" },
+        { str = "(" .. tostring(n.hidden_count) .. " hidden)", hl = "Conceal" },
+        nil
+      )
+      -- TODO: use renderer.indent_width for the padding before
+      local virtual_line_text = "  " .. self:unwrap_highlighted_strings(line)
+      table.insert(self.virtual_lines, { line_nr = #self.lines - 1, text = virtual_line_text })
+    end
     self.depth = self.depth - 1
   end
 end
@@ -381,7 +407,6 @@ function Builder:build_lines(node)
   end
   local num_children = self:get_nodes_number(node.nodes)
   local idx = 1
-  -- table.insert(node.nodes, { name = "cock", path = "cock" })
   for _, n in ipairs(node.nodes) do
     if not n.hidden then
       self:build_signs(n)
@@ -440,6 +465,7 @@ function Builder:build()
   self:build_header()
   self:build_lines()
   self:sanitize_lines()
+  self.virtual_lines = utils.reverse_table(self.virtual_lines)
   return self
 end
 

@@ -79,6 +79,10 @@ function M.reload(node, git_status)
   local profile = log.profile_start("reload %s", node.absolute_path)
 
   local filter_status = filters.prepare(git_status)
+  local is_dir = node.type == "directory"
+  if is_dir then
+    node.hidden_count = 0
+  end
 
   if node.group_next then
     node.nodes = { node.group_next }
@@ -136,6 +140,10 @@ function M.reload(node, git_status)
           n.executable = builders.is_executable(abs) or false
           n.fs_stat = stat
         end
+      end
+    else
+      if is_dir then
+        node.hidden_count = node.hidden_count + 1
       end
     end
   end
