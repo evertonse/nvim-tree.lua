@@ -80,9 +80,6 @@ function M.reload(node, git_status)
 
   local filter_status = filters.prepare(git_status)
   local is_dir = node.type == "directory"
-  if is_dir then
-    node.hidden_count = 0
-  end
 
   if node.group_next then
     node.nodes = { node.group_next }
@@ -94,6 +91,8 @@ function M.reload(node, git_status)
   local node_ignored = explorer_node.is_git_ignored(node)
   ---@type table<string, Node>
   local nodes_by_path = utils.key_by(node.nodes, "absolute_path")
+
+  node.hidden_count = 0
   while true do
     local name, t = vim.loop.fs_scandir_next(handle)
     if not name then
@@ -142,9 +141,7 @@ function M.reload(node, git_status)
         end
       end
     else
-      if is_dir then
-        node.hidden_count = node.hidden_count + 1
-      end
+      node.hidden_count = node.hidden_count + 1
     end
   end
 

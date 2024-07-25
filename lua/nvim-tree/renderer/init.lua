@@ -56,7 +56,7 @@ local function _draw(bufnr, lines, hl_args, signs, extmarks, virtual_lines)
       virt_lines = { { { vline.text, "Conceal" } } },
       virt_lines_above = false,
       virt_lines_leftcol = true,
-      virt_text_win_col = 10,
+      -- virt_text_win_col = 10,
     })
   end
 end

@@ -364,12 +364,15 @@ function Builder:build_line(node, idx, num_children)
     local n = node
     self:build_lines(node)
     if n.open and (n.hidden_count and n.hidden_count > 0) then
+      assert(n.type == "directory")
       indent_markers = pad.get_indent_markers(self.depth, idx, num_children, node, self.markers)
       -- Lua patterns https://www.lua.org/pil/20.2.html
       indent_markers.str = indent_markers.str:reverse():gsub("[^%s]+", "", 1):reverse()
       assert(#indent_markers < 2)
       arrows = pad.get_arrows(node)
       -- local padding = indent_markers.str -- string.rep("  ", self.depth)
+      -- local hidden_count = utils.count_hidden_files(n.absolute_path)
+      -- n.hidden_count = hidden_count
       line = self:format_line(
         indent_markers,
         arrows,
@@ -465,8 +468,20 @@ function Builder:build()
   self:build_header()
   self:build_lines()
   self:sanitize_lines()
-  self.virtual_lines = utils.reverse_table(self.virtual_lines)
+  self:add_root_hidden_count()
   return self
+end
+
+--- Add the hidden_count for root, since root dir is treated differently
+--- from normal directories we need to do it again for root
+---@private
+function Builder:add_root_hidden_count()
+  local root = core.get_explorer()
+  local root_hidden_count = root.hidden_count
+  if root_hidden_count > 0 then
+    table.insert(self.virtual_lines, { line_nr = #self.lines - 1, text = "  (" .. tostring(root_hidden_count) .. " hidden)" })
+    self.virtual_lines = utils.reverse_table(self.virtual_lines)
+  end
 end
 
 function Builder.setup(opts)

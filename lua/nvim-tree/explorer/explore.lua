@@ -23,15 +23,13 @@ local function populate_children(handle, cwd, node, git_status)
 
   local filter_status = filters.prepare(git_status)
 
+  local hidden_count = 0
   while true do
     local name, t = vim.loop.fs_scandir_next(handle)
     if not name then
       break
     end
     local is_dir = t == "directory"
-    if is_dir then
-      node.hidden_count = 0
-    end
 
     local abs = utils.path_join { cwd, name }
     local profile = log.profile_start("explore populate_children %s", abs)
@@ -57,13 +55,13 @@ local function populate_children(handle, cwd, node, git_status)
         explorer_node.update_git_status(child, node_ignored, git_status)
       end
     else
-      if is_dir then
-        node.hidden_count = node.hidden_count + 1
-      end
+      hidden_count = hidden_count + 1
     end
 
     log.profile_end(profile)
   end
+
+  node.hidden_count = hidden_count
 
   -- explorer_module.reload(node)
 end
@@ -94,11 +92,13 @@ function M.explore(node, status)
     log.profile_end(profile)
     return ns
   end
-
+  local old_num = #node.nodes
   sorters.sort(node.nodes)
   live_filter.apply_filter(node)
 
   log.profile_end(profile)
+  local new_num = #node.nodes
+  assert(old_num == new_num, vim.inspect { old_num = old_num, new_num = new_num })
   return node.nodes
 end
 

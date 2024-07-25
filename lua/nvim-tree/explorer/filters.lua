@@ -8,7 +8,7 @@ local M = {
 
 ---@param path string
 ---@return boolean
-local function is_excluded(path)
+M.is_excluded = function(path)
   for _, node in ipairs(M.exclude_list) do
     if path:match(node) then
       return true
@@ -21,7 +21,7 @@ end
 ---@param path string Absolute path
 ---@param git_status table from prepare
 ---@return boolean
-local function git(path, git_status)
+M.git = function(path, git_status)
   if type(git_status) ~= "table" or type(git_status.files) ~= "table" or type(git_status.dirs) ~= "table" then
     return false
   end
@@ -48,7 +48,7 @@ end
 ---@param path string Absolute path
 ---@param bufinfo table vim.fn.getbufinfo { buflisted = 1 }
 ---@return boolean
-local function buf(path, bufinfo)
+M.buf = function(path, bufinfo)
   if not M.config.filter_no_buffer or type(bufinfo) ~= "table" then
     return false
   end
@@ -65,14 +65,14 @@ end
 
 ---@param path string
 ---@return boolean
-local function dotfile(path)
+M.dotfile = function(path)
   return M.config.filter_dotfiles and utils.path_basename(path):sub(1, 1) == "."
 end
 
 ---@param path string
 ---@param path_type string|nil filetype of path
 ---@param bookmarks table<string, string|nil> path, filetype table of bookmarked files
-local function bookmark(path, path_type, bookmarks)
+M.bookmark = function(path, path_type, bookmarks)
   if not M.config.filter_no_bookmark then
     return false
   end
@@ -107,7 +107,7 @@ end
 
 ---@param path string
 ---@return boolean
-local function custom(path)
+M.custom = function(path)
   if not M.config.filter_custom then
     return false
   end
@@ -175,15 +175,15 @@ function M.should_filter(path, fs_stat, status)
   end
 
   -- exclusions override all filters
-  if is_excluded(path) then
+  if M.is_excluded(path) then
     return false
   end
 
-  return git(path, status.git_status)
-    or buf(path, status.bufinfo)
-    or dotfile(path)
-    or custom(path)
-    or bookmark(path, fs_stat and fs_stat.type, status.bookmarks)
+  return M.git(path, status.git_status)
+    or M.buf(path, status.bufinfo)
+    or M.dotfile(path)
+    or M.custom(path)
+    or M.bookmark(path, fs_stat and fs_stat.type, status.bookmarks)
 end
 
 function M.setup(opts)
