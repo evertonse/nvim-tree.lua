@@ -340,7 +340,7 @@ function Builder:build_line(node, idx, num_children)
   local icon, name
   if is_folder then
     icon, name = self:build_folder(node)
-    assert(node.type == "directory")
+    assert(node.type == "directory", "wait, node.type is not 'directory' it is " .. vim.inspect(node.type))
   elseif is_symlink then
     icon, name = self:build_symlink(node)
   else
@@ -382,7 +382,7 @@ function Builder:build_line(node, idx, num_children)
       )
       -- TODO: use renderer.indent_width for the padding before
       local virtual_line_text = "  " .. self:unwrap_highlighted_strings(line)
-      table.insert(self.virtual_lines, { line_nr = #self.lines - 1, text = virtual_line_text })
+      table.insert(self.virtual_lines, { depth = self.depth, line_nr = #self.lines - 1, text = virtual_line_text })
     end
     self.depth = self.depth - 1
   end
@@ -469,6 +469,9 @@ function Builder:build()
   self:build_lines()
   self:sanitize_lines()
   self:add_root_hidden_count()
+  table.sort(self.virtual_lines, function(a, b)
+    return a.depth < b.depth
+  end)
   return self
 end
 
@@ -479,8 +482,10 @@ function Builder:add_root_hidden_count()
   local root = core.get_explorer()
   local root_hidden_count = root.hidden_count
   if root_hidden_count > 0 then
-    table.insert(self.virtual_lines, { line_nr = #self.lines - 1, text = "  (" .. tostring(root_hidden_count) .. " hidden)" })
-    self.virtual_lines = utils.reverse_table(self.virtual_lines)
+    table.insert(
+      self.virtual_lines,
+      { depth = self.depth, line_nr = #self.lines - 1, text = "  (" .. tostring(root_hidden_count) .. " hidden)" }
+    )
   end
 end
 

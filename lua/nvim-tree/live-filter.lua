@@ -165,6 +165,7 @@ end
 function M.start_filtering()
   view.View.live_filter.prev_focused_node = require("nvim-tree.lib").get_node_at_cursor()
   M.filter = M.filter or ""
+  Inspect(M.filter)
 
   redraw()
   local row = require("nvim-tree.core").get_nodes_starting_line() - 1
