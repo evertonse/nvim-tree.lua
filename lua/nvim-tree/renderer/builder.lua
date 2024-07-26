@@ -363,21 +363,19 @@ function Builder:build_line(node, idx, num_children)
     self.depth = self.depth + 1
     local n = node
     self:build_lines(node)
-    if n.open and (n.hidden_count and n.hidden_count > 0) then
+    local hidden_count_format_string = utils.default_format_hidden_count(n.hidden_count)
+    if n.open and hidden_count_format_string then
       assert(n.type == "directory")
       indent_markers = pad.get_indent_markers(self.depth, idx, num_children, node, self.markers)
       -- Lua patterns https://www.lua.org/pil/20.2.html
       indent_markers.str = indent_markers.str:reverse():gsub("[^%s]+", "", 1):reverse()
       assert(#indent_markers < 2)
       arrows = pad.get_arrows(node)
-      -- local padding = indent_markers.str -- string.rep("  ", self.depth)
-      -- local hidden_count = utils.count_hidden_files(n.absolute_path)
-      -- n.hidden_count = hidden_count
       line = self:format_line(
         indent_markers,
         arrows,
         { str = "", hl = "Conceal" },
-        { str = "(" .. tostring(n.hidden_count) .. " hidden)", hl = "Conceal" },
+        { str = hidden_count_format_string, hl = "Conceal" },
         nil
       )
       -- TODO: use renderer.indent_width for the padding before
@@ -480,12 +478,9 @@ end
 ---@private
 function Builder:add_root_hidden_count()
   local root = core.get_explorer()
-  local root_hidden_count = root.hidden_count
-  if root_hidden_count > 0 then
-    table.insert(
-      self.virtual_lines,
-      { depth = self.depth, line_nr = #self.lines - 1, text = "  (" .. tostring(root_hidden_count) .. " hidden)" }
-    )
+  local hidden_count_format_string = utils.default_format_hidden_count(root.hidden_count)
+  if hidden_count_format_string then
+    table.insert(self.virtual_lines, { depth = self.depth, line_nr = #self.lines - 1, text = "  " .. hidden_count_format_string })
   end
 end
 

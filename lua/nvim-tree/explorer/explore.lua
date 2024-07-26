@@ -8,6 +8,7 @@ local live_filter = require "nvim-tree.live-filter"
 local log = require "nvim-tree.log"
 -- local explorer_module = require "nvim-tree.explorer"
 
+local FILTER_REASON = filters.FILTER_REASON
 local Watcher = require "nvim-tree.watcher"
 
 local M = {}
@@ -23,7 +24,14 @@ local function populate_children(handle, cwd, node, git_status)
 
   local filter_status = filters.prepare(git_status)
 
-  local hidden_count = 0
+  node.hidden_count = vim.tbl_deep_extend("force", node.hidden_count or {}, {
+    git = 0,
+    buf = 0,
+    dotfile = 0,
+    custom = 0,
+    bookmark = 0,
+  })
+
   while true do
     local name, t = vim.loop.fs_scandir_next(handle)
     if not name then
@@ -36,8 +44,8 @@ local function populate_children(handle, cwd, node, git_status)
 
     ---@type uv.fs_stat.result|nil
     local stat = vim.loop.fs_stat(abs)
-
-    if not filters.should_filter(abs, stat, filter_status) and not nodes_by_path[abs] and Watcher.is_fs_event_capable(abs) then
+    local filter_reason = filters.should_filter_as_reason(abs, stat, filter_status)
+    if filter_reason == FILTER_REASON.none and not nodes_by_path[abs] and Watcher.is_fs_event_capable(abs) then
       local child = nil
       if is_dir and vim.loop.fs_access(abs, "R") then
         child = builders.folder(node, abs, name, stat)
@@ -55,13 +63,15 @@ local function populate_children(handle, cwd, node, git_status)
         explorer_node.update_git_status(child, node_ignored, git_status)
       end
     else
-      hidden_count = hidden_count + 1
+      for reason, value in pairs(FILTER_REASON) do
+        if filter_reason == value then
+          node.hidden_count[reason] = node.hidden_count[reason] + 1
+        end
+      end
     end
 
     log.profile_end(profile)
   end
-
-  node.hidden_count = hidden_count
 
   -- explorer_module.reload(node)
 end

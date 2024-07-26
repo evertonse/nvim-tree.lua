@@ -6,6 +6,16 @@ local M = {
   custom_function = nil,
 }
 
+---@enum FILTER_REASON
+M.FILTER_REASON = {
+  none = 0, -- It's not filtered
+  git = 1,
+  buf = 2,
+  dotfile = 4,
+  custom = 8,
+  bookmark = 16,
+}
+
 ---@param path string
 ---@return boolean
 M.is_excluded = function(path)
@@ -184,6 +194,35 @@ function M.should_filter(path, fs_stat, status)
     or M.dotfile(path)
     or M.custom(path)
     or M.bookmark(path, fs_stat and fs_stat.type, status.bookmarks)
+end
+
+---@param path string Absolute path
+---@param fs_stat uv.fs_stat.result|nil fs_stat of file
+---@param status table from prepare
+---@return FILTER_REASON
+function M.should_filter_as_reason(path, fs_stat, status)
+  if not M.config.enable then
+    return M.FILTER_REASON.none
+  end
+
+  -- exclusions override all filters
+  if M.is_excluded(path) then
+    return M.FILTER_REASON.none
+  end
+
+  if M.git(path, status.git_status) then
+    return M.FILTER_REASON.git
+  elseif M.buf(path, status.bufinfo) then
+    return M.FILTER_REASON.buf
+  elseif M.dotfile(path) then
+    return M.FILTER_REASON.dotfile
+  elseif M.custom(path) then
+    return M.FILTER_REASON.custom
+  elseif M.bookmark(path, fs_stat and fs_stat.type, status.bookmarks) then
+    return M.FILTER_REASON.bookmark
+  else
+    return M.FILTER_REASON.none
+  end
 end
 
 function M.setup(opts)
