@@ -1,13 +1,11 @@
 local utils = require "nvim-tree.utils"
 local builders = require "nvim-tree.explorer.node-builders"
 local explorer_node = require "nvim-tree.explorer.node"
-local filters = require "nvim-tree.explorer.filters"
-local sorters = require "nvim-tree.explorer.sorters"
 local live_filter = require "nvim-tree.live-filter"
 local git = require "nvim-tree.git"
 local log = require "nvim-tree.log"
 
-local FILTER_REASON = filters.FILTER_REASON
+local FILTER_REASON = require("nvim-tree.enum").FILTER_REASON
 local NodeIterator = require "nvim-tree.iterators.node-iterator"
 local Watcher = require "nvim-tree.watcher"
 
@@ -71,6 +69,10 @@ end
 ---@param node Node
 ---@param git_status table
 function M.reload(node, git_status)
+  local explorer = require("nvim-tree.core").get_explorer()
+  if not explorer then
+    return
+  end
   local cwd = node.link_to or node.absolute_path
   local handle = vim.loop.fs_scandir(cwd)
   if not handle then
@@ -79,8 +81,7 @@ function M.reload(node, git_status)
 
   local profile = log.profile_start("reload %s", node.absolute_path)
 
-  local filter_status = filters.prepare(git_status)
-  local is_dir = node.type == "directory"
+  local filter_status = explorer.filters:prepare(git_status)
 
   if node.group_next then
     node.nodes = { node.group_next }
@@ -112,7 +113,7 @@ function M.reload(node, git_status)
     ---@type uv.fs_stat.result|nil
     local stat = vim.loop.fs_stat(abs)
 
-    local filter_reason = filters.should_filter_as_reason(abs, stat, filter_status)
+    local filter_reason = explorer.filters:should_filter_as_reason(abs, stat, filter_status)
     if filter_reason == FILTER_REASON.none then
       remain_childs[abs] = true
 
@@ -181,7 +182,7 @@ function M.reload(node, git_status)
     return ns
   end
 
-  sorters.sort(node.nodes)
+  explorer.sorters:sort(node.nodes)
   live_filter.apply_filter(node)
   log.profile_end(profile)
   return node.nodes
