@@ -93,6 +93,7 @@ function M.reload(node, git_status)
   ---@type table<string, Node>
   local nodes_by_path = utils.key_by(node.nodes, "absolute_path")
 
+  -- To reset we must 'zero' everything that we use
   node.hidden_count = vim.tbl_deep_extend("force", node.hidden_count or {}, {
     git = 0,
     buf = 0,
