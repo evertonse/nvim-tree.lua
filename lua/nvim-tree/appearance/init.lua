@@ -14,6 +14,7 @@ M.HIGHLIGHT_GROUPS = {
   -- Standard
   { group = "NvimTreeNormal", link = "Normal" },
   { group = "NvimTreeNormalFloat", link = "NormalFloat" },
+  { group = "NvimTreeNormalFloatBorder", link = "FloatBorder" },
   { group = "NvimTreeNormalNC", link = "NvimTreeNormal" },
 
   { group = "NvimTreeLineNr", link = "LineNr" },
@@ -59,6 +60,9 @@ M.HIGHLIGHT_GROUPS = {
   -- Picker
   { group = "NvimTreeWindowPicker", def = "guifg=#ededed guibg=#4493c8 gui=bold ctermfg=White ctermbg=DarkBlue" },
 
+  -- File Size
+  { group = "NvimTreeFileSize", link = "Conceal" },
+
   -- LiveFilter
   { group = "NvimTreeLiveFilterPrefix", link = "PreProc" },
   { group = "NvimTreeLiveFilterValue", link = "ModeMsg" },
@@ -80,6 +84,9 @@ M.HIGHLIGHT_GROUPS = {
   { group = "NvimTreeHiddenIcon", link = "Conceal" },
   { group = "NvimTreeHiddenFileHL", link = "NvimTreeHiddenIcon" },
   { group = "NvimTreeHiddenFolderHL", link = "NvimTreeHiddenFileHL" },
+
+  -- Hidden Display
+  { group = "NvimTreeHiddenDisplay", link = "Conceal" },
 
   -- Opened
   { group = "NvimTreeOpenedHL", link = "Special" },

@@ -50,6 +50,7 @@ M.View = {
       "Normal:NvimTreeNormal",
       "NormalNC:NvimTreeNormalNC",
       "NormalFloat:NvimTreeNormalFloat",
+      "FloatBorder:NvimTreeNormalFloatBorder",
     }, ","),
   },
 }
@@ -574,6 +575,13 @@ function M.configure_width(width)
     M.View.adaptive_size = false
     M.View.width = width
   end
+end
+
+---Get effective width, works on float window
+---@return integer
+function M.get_current_width()
+  local view_winnr = M.get_winnr()
+  return view_winnr and vim.api.nvim_win_get_width(view_winnr or 0) or 0
 end
 
 function M.setup(opts)
